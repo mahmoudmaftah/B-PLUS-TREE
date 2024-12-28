@@ -1,0 +1,6 @@
+*.exe
+.vscode/
+build/
+dist/
+hnswlib/
+deliverables/
