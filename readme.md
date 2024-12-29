@@ -9,9 +9,10 @@
     - [Vector Index (HNSW + B+ Tree)](#vector-index-hnsw--b-tree)
     - [Naive Vector Index](#naive-vector-index)
     - [Test and Benchmarking Utilities](#test-and-benchmarking-utilities)
-4. [Optimizations and Design Decisions](#optimizations-and-design-decisions)
-5. [How to Run and Benchmark](#how-to-run-and-benchmark)
-6. [Future Extensions](#future-extensions)
+4. [Node Structure and Functions](#node-structure-and-functions)
+5. [Optimizations and Design Decisions](#optimizations-and-design-decisions)
+6. [How to Run and Benchmark](#how-to-run-and-benchmark)
+7. [Future Extensions](#future-extensions)
 
 ---
 
@@ -105,6 +106,54 @@ For benchmarking purposes, a naive vector index is implemented in **naiveVectorI
 
 ---
 
+## Interface description
+
+### Node Structure
+The core of the **ProbabilisticVectorIndex** class combines:
+
+1. **B+ Tree Node:**
+   - Key: Scalar value \(s\) (e.g., a numeric property).
+   - Value: Index of the corresponding vector in the dataset.
+
+2. **HNSW Node:**
+   - Stores high-dimensional vectors.
+   - Supports nearest neighbor search with approximate but highly efficient graph traversal.
+
+The B+ Tree nodes allow efficient range queries, while the HNSW nodes enable fast approximate neighbor retrieval for vector data.
+
+### Core Functions
+
+#### Public Methods:
+- **`ProbabilisticVectorIndex(int order):`**
+  - Constructor to initialize the B+ Tree (with the specified order) and prepare the HNSW index.
+
+- **`~ProbabilisticVectorIndex():`**
+  - Destructor to clean up dynamically allocated memory for HNSW structures.
+
+- **`void insert(const std::vector<float>& vec, float s):`**
+  - Inserts a vector and its associated scalar value into the hybrid index.
+  - Updates both the B+ Tree (for scalar filtering) and the HNSW index (for ANN queries).
+
+- **`std::vector<int> query(const std::vector<float>& v, int k, float Smin, float Smax, double alpha = 0.01):`**
+  - Performs a nearest neighbor search for the query vector `v`.
+  - Filters candidates based on scalar range `[Smin, Smax]`.
+  - Dynamically determines the number of candidates \(O\) to retrieve, ensuring a high probability of returning \(k\) valid results.
+
+#### Private Methods:
+- **`int computeRequiredO_BinarySearch(int M, int S, int k, double alpha):`**
+  - Calculates the number of candidates \(O\) to fetch from HNSW using a binary search on the binomial cumulative distribution.
+
+- **`double binomialCDFLessThan(int n, int k, double p):`**
+  - Computes the probability \(P(X < k)\) for \(X \sim 	{Binomial}(n, p)\).
+
+- **`std::vector<int> approximateNearestNeighbors(const std::vector<float>& query, int O):`**
+  - Retrieves the top \(O\) approximate neighbors for a given query vector.
+
+- **`float euclideanDistSquared(const std::vector<float>& a, const std::vector<float>& b):`**
+  - Calculates the squared Euclidean distance between two vectors.
+
+---
+
 ## Optimizations and Design Decisions
 
 1. **Combination of B+ Tree and HNSW:**
@@ -141,14 +190,6 @@ For benchmarking purposes, a naive vector index is implemented in **naiveVectorI
    - Run the specific test binaries (e.g., for insertion times or query times).
    - Outputs will be stored in the `_Output` folder for further analysis.
 
-4. **Visualize Results:**
-   - Use Python to plot benchmarking results. Example:
-     ```python
-     import matplotlib.pyplot as plt
-     data = load_benchmark_results("_Output/insertion_times_order_10.txt")
-     plt.plot(data)
-     plt.show()
-     ```
 
 ---
 
@@ -167,4 +208,6 @@ For benchmarking purposes, a naive vector index is implemented in **naiveVectorI
    - Optimize the index for dynamic datasets where vectors and scalar values are updated frequently.
 
 ---
+
+This README provides a comprehensive overview of the project, detailing the problem it solves, its modular structure, and the benchmarks performed. Feel free to extend or adapt it as your project evolves!
 
