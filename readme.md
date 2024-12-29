@@ -209,5 +209,3 @@ The B+ Tree nodes allow efficient range queries, while the HNSW nodes enable fas
 
 ---
 
-This README provides a comprehensive overview of the project, detailing the problem it solves, its modular structure, and the benchmarks performed. Feel free to extend or adapt it as your project evolves!
-
